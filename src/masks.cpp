@@ -1,0 +1,122 @@
+#include <JankChess/masks.hpp>
+
+namespace Chess {
+constexpr bool Valid(Column col, Row row) {
+    return col >= COL_A && col <= COL_H && row >= ROW_1 && row <= ROW_8;
+}
+
+constexpr void TrySet(BB &bb, int col, int row) {
+    if (Valid(static_cast<Column>(col), static_cast<Row>(row)))
+        bb |= ToBB(ToSquare(static_cast<Column>(col), static_cast<Row>(row)));
+}
+
+constexpr std::array<std::array<BB, 8>, SQUARE_COUNT> RINGS = [] {
+    auto rings = decltype(RINGS){0};
+    for (const auto sq : SQUARES)
+        for (int offset = 1; offset < 8; offset++) {
+            const int DIRECTIONS[4][2] = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
+            const int PROBES[4][2][2]  = {
+                {{1, 0}, {-1, 0}},
+                {{1, 0}, {-1, 0}},
+                {{0, 1}, {0, -1}},
+                {{0, 1}, {0, -1}},
+            };
+
+            const Column col = ToCol(sq);
+            const Row row    = ToRow(sq);
+
+            BB ring = 0;
+            for (int i = 0; i < 4; i++) {
+                const Column col_root = static_cast<Column>(col + offset * DIRECTIONS[i][0]);
+                const Row row_root    = static_cast<Row>(row + offset * DIRECTIONS[i][1]);
+                TrySet(ring, col_root, row_root);
+                for (int probe = 0; probe < 2; probe++) {
+                    for (int o = 1; o <= offset; o++)
+                        TrySet(
+                            ring, col + offset * DIRECTIONS[i][0] + o * PROBES[i][probe][0],
+                            row + offset * DIRECTIONS[i][1] + o * PROBES[i][probe][1]
+                        );
+                }
+            }
+            rings[sq][offset] = ring;
+        }
+    return rings;
+}();
+
+constexpr std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> RAYS = [] {
+    auto rays = decltype(RAYS){0};
+
+    for (const auto ori : SQUARES)
+        for (const auto dst : SQUARES) {
+            Column col_ori = ToCol(ori);
+            Column col_dst = ToCol(dst);
+            Row row_ori    = ToRow(ori);
+            Row row_dst    = ToRow(dst);
+
+            int x = (col_ori == col_dst) ? 0 : (col_ori < col_dst ? 1 : -1);
+            int y = (row_ori == row_dst) ? 0 : (row_ori < row_dst ? 1 : -1);
+
+            BB ray = 0;
+            for (int i = 1; i < 8; i++)
+                TrySet(ray, col_ori + i * x, row_ori + i * y);
+            rays[ori][dst] = ray;
+        }
+
+    return rays;
+}();
+
+constexpr std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> XRAYS = [] {
+    auto rays = decltype(XRAYS){0};
+    for (const auto ori : SQUARES)
+        for (const auto dst : SQUARES)
+            rays[ori][dst] = RAYS[ori][dst] & (~RAYS[dst][ori]) & (~ToBB(dst));
+    return rays;
+}();
+
+constexpr std::array<std::array<BB, SQUARE_COUNT + 1>, COLOR_COUNT> PAWN_ATTACKS = [] {
+    auto attacks = decltype(PAWN_ATTACKS){0};
+    for (int c = 0; c < 2; c++) {
+        const int offset = (c == WHITE) ? 1 : -1;
+        for (const auto sq : SQUARES) {
+            TrySet(attacks[c][sq], ToCol(sq) + 1, ToRow(sq) + offset);
+            TrySet(attacks[c][sq], ToCol(sq) - 1, ToRow(sq) + offset);
+        }
+        attacks[c][SQUARE_NONE] = 0;
+    }
+    return attacks;
+}();
+
+constexpr std::array<std::array<BB, SQUARE_COUNT>, PIECE_COUNT> PSEUDO_ATTACKS = [] {
+    auto attacks = decltype(PSEUDO_ATTACKS){0};
+
+    const int delta_knight[8][2] = {{2, 1}, {2, -1}, {-2, 1}, {-2, -1},
+                                    {1, 2}, {1, -2}, {-1, 2}, {-1, -2}};
+    for (const auto sq : SQUARES) {
+        // Set knight attacks
+        for (int dir = 0; dir < 8; dir++) {
+            TrySet(
+                attacks[KNIGHT][sq], ToCol(sq) + delta_knight[dir][0],
+                ToRow(sq) + delta_knight[dir][1]
+            );
+        }
+
+        // Set king attacks
+        attacks[KING][sq] = RINGS[sq][1];
+
+        // Set bishop + rook attacks
+        for (int offset = 1; offset < 8; offset++) {
+            TrySet(attacks[BISHOP][sq], ToCol(sq) + offset, ToRow(sq) + offset);
+            TrySet(attacks[BISHOP][sq], ToCol(sq) + offset, ToRow(sq) - offset);
+            TrySet(attacks[BISHOP][sq], ToCol(sq) - offset, ToRow(sq) + offset);
+            TrySet(attacks[BISHOP][sq], ToCol(sq) - offset, ToRow(sq) - offset);
+            TrySet(attacks[ROOK][sq], ToCol(sq) + offset, ToRow(sq));
+            TrySet(attacks[ROOK][sq], ToCol(sq) - offset, ToRow(sq));
+            TrySet(attacks[ROOK][sq], ToCol(sq), ToRow(sq) + offset);
+            TrySet(attacks[ROOK][sq], ToCol(sq), ToRow(sq) - offset);
+            attacks[QUEEN][sq] = attacks[BISHOP][sq] | attacks[ROOK][sq];
+        }
+    }
+
+    return attacks;
+}();
+} // namespace Chess
