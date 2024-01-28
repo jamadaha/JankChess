@@ -33,7 +33,8 @@ constexpr BB CENTER_FILES = FILE_C | FILE_D | FILE_E | FILE_F;
 constexpr BB CENTER       = CENTER_RANKS & CENTER_FILES;
 
 extern const std::array<std::array<BB, 8>, SQUARE_COUNT> RINGS;
-extern const std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> RAYS;
+extern const std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> SQ_RAYS;
+extern const std::array<std::array<BB, DIRECTION_COUNT>, SQUARE_COUNT> DIR_RAYS;
 extern const std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> XRAYS;
 extern const std::array<std::array<BB, SQUARE_COUNT + 1>, COLOR_COUNT> PAWN_ATTACKS;
 extern const std::array<std::array<BB, SQUARE_COUNT>, PIECE_COUNT> PSEUDO_ATTACKS;

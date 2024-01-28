@@ -32,18 +32,21 @@ enum Piece { PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, PIECE_NONE };
 enum Column { COL_A, COL_B, COL_C, COL_D, COL_E, COL_F, COL_G, COL_H, COL_NONE };
 enum Row { ROW_1, ROW_2, ROW_3, ROW_4, ROW_5, ROW_6, ROW_7, ROW_8, ROW_NONE };
 enum class Castling { None, King, Queen, Both };
-enum class Direction {
-    North,
-    East,
-    South,
-    West,
+enum Direction {
+    NORTH,
+    EAST,
+    SOUTH,
+    WEST,
 
-    NorthEast,
-    NorthWest,
-    SouthEast,
-    SouthWest,
-    None
+    NORTH_EAST,
+    NORTH_WEST,
+    SOUTH_EAST,
+    SOUTH_WEST,
+    DIRECTION_NONE
 };
+#define DIRECTION_COUNT 8
+constexpr std::array<Direction, DIRECTION_COUNT> DIRECTIONS = {
+    NORTH, EAST, SOUTH, WEST, NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST};
 
 constexpr std::array<Piece, PIECE_COUNT> PIECES   = {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING};
 static const std::string PIECE_CHARS[COLOR_COUNT] = {"PNBRQK", "pnbrqk"};

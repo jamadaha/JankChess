@@ -50,9 +50,8 @@ int main(int argc, char **argv) {
     Board board;
     if (argc == 3)
         board = Board(FEN);
-    else {
+    else
         board = Board(FEN, argv[3]);
-    }
 
     PerftDivide(board, depth);
 

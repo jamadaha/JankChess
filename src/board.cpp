@@ -97,26 +97,27 @@ bool Board::IsKingSafe(Color color) const noexcept {
     const BB bishops = Pieces(!color, BISHOP) | Pieces(!color, QUEEN);
     const BB rooks   = Pieces(!color, ROOK) | Pieces(!color, QUEEN);
 
-    if (PAWN_ATTACKS[color][king] & pawns) [[unlikely]]
-        return false;
-    if (PSEUDO_ATTACKS[KNIGHT][king] & knights) [[unlikely]]
-        return false;
-    if (PSEUDO_ATTACKS[KING][king] & kings) [[unlikely]]
-        return false;
+    if (PAWN_ATTACKS[color][king] & pawns) return false;
+    if (PSEUDO_ATTACKS[KNIGHT][king] & knights) return false;
+    if (PSEUDO_ATTACKS[KING][king] & kings) return false;
 
-    BB unblocked = PSEUDO_ATTACKS[QUEEN][king];
-    BB potential_hazards =
-        (PSEUDO_ATTACKS[ROOK][king] & rooks) | (PSEUDO_ATTACKS[BISHOP][king] & bishops);
-    if (!potential_hazards) return true;
-    for (int offset = 1; offset < 8 && unblocked; offset++) {
-        BB p_ring   = RINGS[king][offset] & unblocked;
-        BB blockers = p_ring & occ;
-        if (blockers & potential_hazards) [[unlikely]]
-            return false;
+    if (const BB ray = DIR_RAYS[king][NORTH]; ray & rooks)
+        if (lsb(ray & rooks) == lsb(ray & occ)) return false;
+    if (const BB ray = DIR_RAYS[king][EAST]; ray & rooks)
+        if (lsb(ray & rooks) == lsb(ray & occ)) return false;
+    if (const BB ray = DIR_RAYS[king][SOUTH]; ray & rooks)
+        if (msb(ray & rooks) == msb(ray & occ)) return false;
+    if (const BB ray = DIR_RAYS[king][WEST]; ray & rooks)
+        if (msb(ray & rooks) == msb(ray & occ)) return false;
 
-        while (blockers)
-            unblocked &= ~RAYS[king][lsb_pop(blockers)];
-    }
+    if (const BB ray = DIR_RAYS[king][NORTH_EAST]; ray & bishops)
+        if (lsb(ray & bishops) == lsb(ray & occ)) return false;
+    if (const BB ray = DIR_RAYS[king][NORTH_WEST]; ray & bishops)
+        if (lsb(ray & bishops) == lsb(ray & occ)) return false;
+    if (const BB ray = DIR_RAYS[king][SOUTH_EAST]; ray & bishops)
+        if (msb(ray & bishops) == msb(ray & occ)) return false;
+    if (const BB ray = DIR_RAYS[king][SOUTH_WEST]; ray & bishops)
+        if (msb(ray & bishops) == msb(ray & occ)) return false;
 
     return true;
 }
@@ -140,8 +141,7 @@ BB Board::GenerateAttacks(Color color) const noexcept {
     BB rooks      = Pieces(color, ROOK) | Pieces(color, QUEEN);
     BB sliders[2] = {bishops, rooks};
     const std::array<std::array<BB, SQUARE_COUNT>, 2> &p_attacks = {
-        PSEUDO_ATTACKS[BISHOP], PSEUDO_ATTACKS[ROOK]
-    };
+        PSEUDO_ATTACKS[BISHOP], PSEUDO_ATTACKS[ROOK]};
     for (int i = 0; i < 2; i++) {
         while (sliders[i]) {
             const Square piece = lsb_pop(sliders[i]);
@@ -153,7 +153,7 @@ BB Board::GenerateAttacks(Color color) const noexcept {
                 attacks |= p_ring;
 
                 while (blockers)
-                    unblocked &= ~RAYS[piece][lsb_pop(blockers)];
+                    unblocked &= ~SQ_RAYS[piece][lsb_pop(blockers)];
             }
         }
     }

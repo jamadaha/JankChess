@@ -87,7 +87,7 @@ void GenerateSliderMoves(
             BB blocked   = p_ring & occ;
 
             while (blocked)
-                unblocked &= ~RAYS[piece][lsb_pop(blocked)];
+                unblocked &= ~SQ_RAYS[piece][lsb_pop(blocked)];
 
             BuildMoves(moves, piece, pot_moves, type);
         }

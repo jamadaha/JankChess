@@ -1,3 +1,4 @@
+#include "JankChess/bb.hpp"
 #include <JankChess/masks.hpp>
 
 namespace Chess {
@@ -5,9 +6,10 @@ constexpr bool Valid(Column col, Row row) {
     return col >= COL_A && col <= COL_H && row >= ROW_1 && row <= ROW_8;
 }
 
-constexpr void TrySet(BB &bb, int col, int row) {
-    if (Valid(static_cast<Column>(col), static_cast<Row>(row)))
-        bb |= ToBB(ToSquare(static_cast<Column>(col), static_cast<Row>(row)));
+constexpr bool TrySet(BB &bb, int col, int row) {
+    if (!Valid(static_cast<Column>(col), static_cast<Row>(row))) return false;
+    bb |= ToBB(ToSquare(static_cast<Column>(col), static_cast<Row>(row)));
+    return true;
 }
 
 constexpr std::array<std::array<BB, 8>, SQUARE_COUNT> RINGS = [] {
@@ -43,8 +45,8 @@ constexpr std::array<std::array<BB, 8>, SQUARE_COUNT> RINGS = [] {
     return rings;
 }();
 
-constexpr std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> RAYS = [] {
-    auto rays = decltype(RAYS){0};
+constexpr std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> SQ_RAYS = [] {
+    auto rays = decltype(SQ_RAYS){0};
 
     for (const auto ori : SQUARES)
         for (const auto dst : SQUARES) {
@@ -65,11 +67,34 @@ constexpr std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> RAYS = [] {
     return rays;
 }();
 
+constexpr std::array<std::array<BB, DIRECTION_COUNT>, SQUARE_COUNT> DIR_RAYS = [] {
+    constexpr std::array<BB, 8> EDGES = {RANK_8,          FILE_H,          RANK_1,
+                                         FILE_A,          RANK_8 | FILE_H, RANK_8 | FILE_A,
+                                         RANK_1 | FILE_H, RANK_1 | FILE_A};
+
+    auto rays = decltype(DIR_RAYS){0};
+
+    for (const auto sq : SQUARES)
+        for (const auto dir : DIRECTIONS) {
+            BB ray = 0;
+
+            BB dot = ToBB(sq);
+            while (dot & (~EDGES[dir])) {
+                dot = shift(dot, dir);
+                ray |= dot;
+            }
+
+            rays[static_cast<size_t>(sq)][static_cast<size_t>(dir)] = ray;
+        }
+
+    return rays;
+}();
+
 constexpr std::array<std::array<BB, SQUARE_COUNT>, SQUARE_COUNT> XRAYS = [] {
     auto rays = decltype(XRAYS){0};
     for (const auto ori : SQUARES)
         for (const auto dst : SQUARES)
-            rays[ori][dst] = RAYS[ori][dst] & (~RAYS[dst][ori]) & (~ToBB(dst));
+            rays[ori][dst] = SQ_RAYS[ori][dst] & (~SQ_RAYS[dst][ori]) & (~ToBB(dst));
     return rays;
 }();
 

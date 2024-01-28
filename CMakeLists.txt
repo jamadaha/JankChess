@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14.0)
 
 project(
     JankChess
-    VERSION 1.0.0
+    VERSION 1.0.1
     LANGUAGES CXX
 )
 
@@ -26,7 +26,6 @@ add_library(
     include/JankChess/move.hpp
     include/JankChess/move_gen.hpp
     include/JankChess/zobrist.hpp
-    src/bb.cpp
     src/board.cpp
     src/masks.cpp
     src/move.cpp
