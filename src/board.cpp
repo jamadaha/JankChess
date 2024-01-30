@@ -66,21 +66,7 @@ BB Board::Pieces() const noexcept { return Pieces(WHITE) | Pieces(BLACK); };
 BB Board::Pieces(Piece piece) const noexcept { return this->pieces[piece]; }
 BB Board::Pieces(Color color) const noexcept { return this->colors[color]; }
 BB Board::Pieces(Color color, Piece piece) const noexcept { return Pieces(color) & Pieces(piece); }
-Piece Board::SquarePiece(Square square) const noexcept {
-    if (square & Pieces(PAWN)) [[unlikely]]
-        return PAWN;
-    if (square & Pieces(KNIGHT)) [[unlikely]]
-        return KNIGHT;
-    if (square & Pieces(BISHOP)) [[unlikely]]
-        return BISHOP;
-    if (square & Pieces(ROOK)) [[unlikely]]
-        return ROOK;
-    if (square & Pieces(QUEEN)) [[unlikely]]
-        return QUEEN;
-    if (square & Pieces(KING)) [[unlikely]]
-        return KING;
-    return PIECE_NONE;
-}
+Piece Board::SquarePiece(Square square) const noexcept { return this->square_pieces[square]; }
 Color Board::SquareColor(Square square) const noexcept {
     if (square & Pieces(WHITE)) return WHITE;
     if (square & Pieces(BLACK)) return BLACK;
@@ -166,6 +152,8 @@ BB Board::GenerateAttacks(Color color) const noexcept {
 void Board::ClearBoard() {
     memset(this, 0, sizeof(Board));
     this->ep = SQUARE_NONE;
+    for (const auto sq : SQUARES)
+        this->square_pieces[sq] = PIECE_NONE;
 }
 
 void Board::FlipPiece(Color color, Piece piece, Square square) noexcept {
@@ -178,9 +166,11 @@ void Board::FlipPiece(Color color, Piece piece, Square square) noexcept {
 }
 void Board::PlacePiece(Color color, Piece piece, Square square) noexcept {
     FlipPiece(color, piece, square);
+    this->square_pieces[square] = piece;
 }
 void Board::RemovePiece(Color color, Piece piece, Square square) noexcept {
     FlipPiece(color, piece, square);
+    this->square_pieces[square] = PIECE_NONE;
 }
 Board::UndoInformation Board::ApplyMove(Move move) noexcept {
     UndoInformation info = {.ep = this->ep, .castling = this->castling};

@@ -67,6 +67,7 @@ public:
 private:
     BB pieces[PIECE_COUNT];
     BB colors[COLOR_COUNT];
+    Piece square_pieces[SQUARE_COUNT];
     Color turn;
     Square ep;
     std::array<Castling, COLOR_COUNT> castling;
