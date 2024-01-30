@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14.0)
 
 project(
     JankChess
-    VERSION 1.0.1
+    VERSION 1.0.2
     LANGUAGES CXX
 )
 
@@ -11,8 +11,6 @@ add_compile_options(
     -march=native
     # Allow inlining inbetween translation units
     -flto -fwhole-program -fuse-linker-plugin
-    # Assume no shenanigans in loops (Commented as LSP complains)
-    #-faggressive-loop-optimizations
     # Honestly no clue (However, it makes program go fast.)
     -ftracer
 )

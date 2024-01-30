@@ -32,6 +32,7 @@ Board::Board(std::string FEN) noexcept {
     this->turn = tolower(FEN[0]) == 'w' ? WHITE : BLACK;
 
     FEN.erase(0, 2);
+    std::array<Castling, COLOR_COUNT> &castling = this->history[0].castling;
 
     while (FEN[0] != ' ' && !FEN.empty()) {
         switch (FEN[0]) {
@@ -59,8 +60,10 @@ Board::Board(const std::string &FEN, const std::string &moves) noexcept {
 size_t Board::MoveCount() const noexcept { return this->move_count; }
 size_t Board::Ply() const noexcept { return this->ply; }
 Color Board::Turn() const noexcept { return this->turn; }
-Square Board::EP() const noexcept { return this->ep; }
-Castling Board::GetCastling(Color color) const noexcept { return this->castling[color]; }
+Square Board::EP() const noexcept { return this->history[ply].ep; }
+Castling Board::GetCastling(Color color) const noexcept {
+    return this->history[ply].castling[color];
+}
 Hash Board::GetHash() const noexcept { return this->hash; }
 BB Board::Pieces() const noexcept { return Pieces(WHITE) | Pieces(BLACK); };
 BB Board::Pieces(Piece piece) const noexcept { return this->pieces[piece]; }
@@ -151,7 +154,10 @@ BB Board::GenerateAttacks(Color color) const noexcept {
 
 void Board::ClearBoard() {
     memset(this, 0, sizeof(Board));
-    this->ep = SQUARE_NONE;
+    for (int i = 0; i < MAX_PLY; i++) {
+        this->history[i].ep       = SQUARE_NONE;
+        this->history[i].captured = PIECE_NONE;
+    }
     for (const auto sq : SQUARES)
         this->square_pieces[sq] = PIECE_NONE;
 }
@@ -172,16 +178,17 @@ void Board::RemovePiece(Color color, Piece piece, Square square) noexcept {
     FlipPiece(color, piece, square);
     this->square_pieces[square] = PIECE_NONE;
 }
-Board::UndoInformation Board::ApplyMove(Move move) noexcept {
-    UndoInformation info = {.ep = this->ep, .castling = this->castling};
-    const Color us       = Turn();
-    const Color nus      = !us;
-    const Square ori     = move.Origin();
-    const Square dst     = move.Destination();
-    Piece piece          = SquarePiece(ori);
-    Piece target         = PIECE_NONE;
-    Square target_square = dst;
-    Square ep            = SQUARE_NONE;
+void Board::ApplyMove(Move move) noexcept {
+    this->ply++;
+    this->history[ply].castling = this->history[ply - 1].castling;
+    const Color us              = Turn();
+    const Color nus             = !us;
+    const Square ori            = move.Origin();
+    const Square dst            = move.Destination();
+    Piece piece                 = SquarePiece(ori);
+    Piece target                = PIECE_NONE;
+    Square target_square        = dst;
+    Square ep                   = SQUARE_NONE;
 
     RemovePiece(us, piece, ori);
 
@@ -205,15 +212,16 @@ Board::UndoInformation Board::ApplyMove(Move move) noexcept {
     case Move::BPromotionCapture: piece = BISHOP; goto CAPTURE;
     case Move::RPromotionCapture: piece = ROOK; goto CAPTURE;
     case Move::QPromotionCapture: piece = QUEEN; goto CAPTURE;
-    case Move::EPCapture: target_square = static_cast<Square>(EP() + (us == WHITE ? -8 : 8));
+    case Move::EPCapture:
+        target_square = static_cast<Square>(this->history[ply - 1].ep + (us == WHITE ? -8 : 8));
     case Move::Capture: {
     CAPTURE:
         target = SquarePiece(target_square);
         RemovePiece(nus, target, target_square);
         if (target_square == CORNER_A[nus])
-            castling[nus] &= Castling::King;
+            this->history[ply].castling[nus] &= Castling::King;
         else if (target_square == CORNER_H[nus])
-            castling[nus] &= Castling::Queen;
+            this->history[ply].castling[nus] &= Castling::Queen;
         break;
     }
     case Move::DoublePawnPush: ep = static_cast<Square>((us == WHITE) ? ori + 8 : ori - 8); break;
@@ -223,35 +231,36 @@ Board::UndoInformation Board::ApplyMove(Move move) noexcept {
     PlacePiece(us, piece, dst);
 
     if (piece == KING) [[unlikely]]
-        this->castling[us] = Castling::None;
+        this->history[ply].castling[us] = Castling::None;
     else if (piece == ROOK) [[unlikely]] {
         if (ori == CORNER_A[us])
-            this->castling[us] &= Castling::King;
+            this->history[ply].castling[us] &= Castling::King;
         else if (ori == CORNER_H[us])
-            this->castling[us] &= Castling::Queen;
+            this->history[ply].castling[us] &= Castling::Queen;
     }
 
-    info.captured = target;
-    this->ep      = ep;
-    this->turn    = !this->Turn();
-    this->hash    = FlipTurn(this->hash);
+    if (auto p_ep = this->history[ply - 1].ep; p_ep != ep) {
+        this->hash = FlipEnpassant(this->hash, ep);
+        this->hash = FlipEnpassant(this->hash, p_ep);
+    }
+
     this->move_count++;
-    this->ply++;
-    return info;
+    this->history[ply].ep       = ep;
+    this->history[ply].captured = target;
+    this->turn                  = !this->Turn();
+    this->hash                  = FlipTurn(this->hash);
 }
-void Board::UndoMove(Move move, UndoInformation info) noexcept {
-    this->ep       = info.ep;
-    this->castling = info.castling;
-    this->turn     = !this->Turn();
-    this->hash     = FlipTurn(this->hash);
-    this->ply--;
+void Board::UndoMove(Move move) noexcept {
+    this->turn           = !this->Turn();
+    this->hash           = FlipTurn(this->hash);
     const Color us       = Turn();
     const Color nus      = !us;
     const Square ori     = move.Origin();
     const Square dst     = move.Destination();
     Piece piece          = SquarePiece(dst);
-    Piece target         = info.captured;
+    Piece target         = this->history[ply].captured;
     Square target_square = dst;
+    this->ply--;
 
     RemovePiece(us, piece, dst);
 
@@ -284,5 +293,10 @@ void Board::UndoMove(Move move, UndoInformation info) noexcept {
     }
 
     PlacePiece(us, piece, ori);
+
+    if (this->history[ply].ep != this->history[ply + 1].ep) {
+        this->hash = FlipEnpassant(this->hash, this->history[ply].ep);
+        this->hash = FlipEnpassant(this->hash, this->history[ply + 1].ep);
+    }
 }
 } // namespace Chess

@@ -11,6 +11,7 @@ add_executable(
     ${CMAKE_CURRENT_LIST_DIR}/masks.cpp
     ${CMAKE_CURRENT_LIST_DIR}/move.cpp
     ${CMAKE_CURRENT_LIST_DIR}/move_gen.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/zobrist.cpp
     ${CMAKE_CURRENT_LIST_DIR}/perft.cpp
 )
 

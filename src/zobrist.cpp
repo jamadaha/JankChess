@@ -1,8 +1,6 @@
 #include <JankChess/zobrist.hpp>
 
 namespace Chess {
-// Consists of turn key, castling rights, EP squares, Piece squares
-constexpr size_t HASH_COUNT = 1 + 4 * 2 + SQUARE_COUNT + COLOR_COUNT * PIECE_COUNT * SQUARE_COUNT;
 
 // Generate hashses in a pseudo-random way
 // Cannot use *actual* randomness as its compile time

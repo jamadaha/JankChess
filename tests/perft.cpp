@@ -13,9 +13,9 @@ size_t Perft(Board &board, int depth) {
     size_t nodes = 0;
 
     for (const auto &move : moves) {
-        const auto info = board.ApplyMove(move);
+        board.ApplyMove(move);
         if (board.IsKingSafe(!board.Turn())) nodes += Perft(board, depth - 1);
-        board.UndoMove(move, info);
+        board.UndoMove(move);
     }
 
     return nodes;

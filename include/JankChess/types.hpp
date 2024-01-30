@@ -20,6 +20,8 @@ namespace Chess {
 
 // Maximum number of possible moves at any given position
 #define MAX_MOVES 256
+// Maximum number of moves from start pos
+#define MAX_PLY 256
 
 // A bitmask of a chess board, where a one corresponds to the index of the
 // square
@@ -45,8 +47,9 @@ enum Direction {
     DIRECTION_NONE
 };
 #define DIRECTION_COUNT 8
-constexpr std::array<Direction, DIRECTION_COUNT> DIRECTIONS = {
-    NORTH, EAST, SOUTH, WEST, NORTH_EAST, NORTH_WEST, SOUTH_EAST, SOUTH_WEST};
+constexpr std::array<Direction, DIRECTION_COUNT> DIRECTIONS = {NORTH,      EAST,       SOUTH,
+                                                               WEST,       NORTH_EAST, NORTH_WEST,
+                                                               SOUTH_EAST, SOUTH_WEST};
 
 constexpr std::array<Piece, PIECE_COUNT> PIECES   = {PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING};
 static const std::string PIECE_CHARS[COLOR_COUNT] = {"PNBRQK", "pnbrqk"};

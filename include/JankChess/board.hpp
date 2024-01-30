@@ -60,20 +60,24 @@ public:
     // Modifies board to a state where no piece of color is on square
     void RemovePiece(Color color, Piece piece, Square square) noexcept;
     // Modifies board to a state where the move is applied
-    UndoInformation ApplyMove(Move move) noexcept;
+    void ApplyMove(Move move) noexcept;
     // Modifies board to a state where the move is undone
-    void UndoMove(Move move, UndoInformation info) noexcept;
+    void UndoMove(Move move) noexcept;
 
 private:
+    struct PlyInfo {
+        Square ep;
+        std::array<Castling, COLOR_COUNT> castling;
+        Piece captured;
+    };
     BB pieces[PIECE_COUNT];
     BB colors[COLOR_COUNT];
     Piece square_pieces[SQUARE_COUNT];
     Color turn;
-    Square ep;
-    std::array<Castling, COLOR_COUNT> castling;
     Hash hash;
     size_t move_count;
     size_t ply;
+    PlyInfo history[MAX_PLY];
 
     void FlipPiece(Color color, Piece piece, Square square) noexcept;
 };

@@ -12,9 +12,9 @@ size_t Perft(Board &board, int depth) {
     size_t nodes = 0;
 
     for (const auto &move : moves) {
-        const auto info = board.ApplyMove(move);
+        board.ApplyMove(move);
         if (board.IsKingSafe(!board.Turn())) nodes += Perft(board, depth - 1);
-        board.UndoMove(move, info);
+        board.UndoMove(move);
     }
 
     return nodes;
@@ -30,7 +30,7 @@ void PerftDivide(Board &board, int depth) {
     const MoveList moves = GenerateMovesAll(board, board.Turn());
 
     for (const auto move : moves) {
-        const auto info = board.ApplyMove(move);
+        board.ApplyMove(move);
 
         if (board.IsKingSafe(!board.Turn())) {
             const size_t nodes = Perft(board, depth - 1);
@@ -38,7 +38,7 @@ void PerftDivide(Board &board, int depth) {
             total += nodes;
         }
 
-        board.UndoMove(move, info);
+        board.UndoMove(move);
     }
 
     printf("\n%zu\n", total);
