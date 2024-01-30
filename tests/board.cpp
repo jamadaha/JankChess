@@ -71,33 +71,97 @@ TEST_SUITE("BOARD::UPDATE") {
         CHECK_EQ(board.Pieces(PAWN), 0x1000000000000);
         CHECK_EQ(board.Pieces(QUEEN), 0);
     }
-    TEST_CASE("CASTLING_KING") {
+    TEST_CASE("CASTLING_KING_WHITE") {
         Board board = Board("4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1");
         CHECK_EQ(board.GetCastling(WHITE), Castling::Both);
         CHECK_EQ(board.Pieces(KING), 0x1000000000000010);
         CHECK_EQ(board.Pieces(ROOK), 0x81);
+        CHECK_EQ(board.SquarePiece(E1), KING);
+        CHECK_EQ(board.SquarePiece(A1), ROOK);
+        CHECK_EQ(board.SquarePiece(H1), ROOK);
         auto info = board.ApplyMove(Move(E1, G1, Move::KingCastle));
         CHECK_EQ(board.GetCastling(WHITE), Castling::None);
         CHECK_EQ(board.Pieces(KING), 0x1000000000000040);
         CHECK_EQ(board.Pieces(ROOK), 0x21);
+        CHECK_EQ(board.SquarePiece(G1), KING);
+        CHECK_EQ(board.SquarePiece(A1), ROOK);
+        CHECK_EQ(board.SquarePiece(F1), ROOK);
         board.UndoMove(Move(E1, G1, Move::KingCastle), info);
         CHECK_EQ(board.GetCastling(WHITE), Castling::Both);
         CHECK_EQ(board.Pieces(KING), 0x1000000000000010);
         CHECK_EQ(board.Pieces(ROOK), 0x81);
+        CHECK_EQ(board.SquarePiece(E1), KING);
+        CHECK_EQ(board.SquarePiece(A1), ROOK);
+        CHECK_EQ(board.SquarePiece(H1), ROOK);
     }
-    TEST_CASE("CASTLING_QUEEN") {
+    TEST_CASE("CASTLING_KING_BLACK") {
+        Board board = Board("r3k2r/8/8/8/8/8/8/4K3 b kq - 0 1");
+        CHECK_EQ(board.GetCastling(BLACK), Castling::Both);
+        CHECK_EQ(board.Pieces(KING), 0x1000000000000010);
+        CHECK_EQ(board.Pieces(ROOK), 0x8100000000000000);
+        CHECK_EQ(board.SquarePiece(E8), KING);
+        CHECK_EQ(board.SquarePiece(A8), ROOK);
+        CHECK_EQ(board.SquarePiece(H8), ROOK);
+        auto info = board.ApplyMove(Move(E8, G8, Move::KingCastle));
+        CHECK_EQ(board.GetCastling(BLACK), Castling::None);
+        CHECK_EQ(board.Pieces(KING), 0x4000000000000010);
+        CHECK_EQ(board.Pieces(ROOK), 0x2100000000000000);
+        CHECK_EQ(board.SquarePiece(G8), KING);
+        CHECK_EQ(board.SquarePiece(A8), ROOK);
+        CHECK_EQ(board.SquarePiece(F8), ROOK);
+        board.UndoMove(Move(E8, G8, Move::KingCastle), info);
+        CHECK_EQ(board.GetCastling(BLACK), Castling::Both);
+        CHECK_EQ(board.Pieces(KING), 0x1000000000000010);
+        CHECK_EQ(board.Pieces(ROOK), 0x8100000000000000);
+        CHECK_EQ(board.SquarePiece(E8), KING);
+        CHECK_EQ(board.SquarePiece(A8), ROOK);
+        CHECK_EQ(board.SquarePiece(H8), ROOK);
+    }
+    TEST_CASE("CASTLING_QUEEN_WHITE") {
         Board board = Board("4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1");
         CHECK_EQ(board.GetCastling(WHITE), Castling::Both);
         CHECK_EQ(board.Pieces(KING), 0x1000000000000010);
         CHECK_EQ(board.Pieces(ROOK), 0x81);
+        CHECK_EQ(board.SquarePiece(E1), KING);
+        CHECK_EQ(board.SquarePiece(A1), ROOK);
+        CHECK_EQ(board.SquarePiece(H1), ROOK);
         auto info = board.ApplyMove(Move(E1, C1, Move::QueenCastle));
         CHECK_EQ(board.GetCastling(WHITE), Castling::None);
         CHECK_EQ(board.Pieces(KING), 0x1000000000000004);
         CHECK_EQ(board.Pieces(ROOK), 0x88);
+        CHECK_EQ(board.SquarePiece(C1), KING);
+        CHECK_EQ(board.SquarePiece(D1), ROOK);
+        CHECK_EQ(board.SquarePiece(H1), ROOK);
         board.UndoMove(Move(E1, C1, Move::QueenCastle), info);
         CHECK_EQ(board.GetCastling(WHITE), Castling::Both);
         CHECK_EQ(board.Pieces(KING), 0x1000000000000010);
         CHECK_EQ(board.Pieces(ROOK), 0x81);
+        CHECK_EQ(board.SquarePiece(E1), KING);
+        CHECK_EQ(board.SquarePiece(A1), ROOK);
+        CHECK_EQ(board.SquarePiece(H1), ROOK);
+    }
+    TEST_CASE("CASTLING_QUEEN_BLACK") {
+        Board board = Board("r3k2r/8/8/8/8/8/8/4K3 b kq - 0 1");
+        CHECK_EQ(board.GetCastling(BLACK), Castling::Both);
+        CHECK_EQ(board.Pieces(KING), 0x1000000000000010);
+        CHECK_EQ(board.Pieces(ROOK), 0x8100000000000000);
+        CHECK_EQ(board.SquarePiece(E8), KING);
+        CHECK_EQ(board.SquarePiece(A8), ROOK);
+        CHECK_EQ(board.SquarePiece(H8), ROOK);
+        auto info = board.ApplyMove(Move(E8, C8, Move::QueenCastle));
+        CHECK_EQ(board.GetCastling(BLACK), Castling::None);
+        CHECK_EQ(board.Pieces(KING), 0x400000000000010);
+        CHECK_EQ(board.Pieces(ROOK), 0x8800000000000000);
+        CHECK_EQ(board.SquarePiece(C8), KING);
+        CHECK_EQ(board.SquarePiece(D8), ROOK);
+        CHECK_EQ(board.SquarePiece(H8), ROOK);
+        board.UndoMove(Move(E8, C8, Move::QueenCastle), info);
+        CHECK_EQ(board.GetCastling(BLACK), Castling::Both);
+        CHECK_EQ(board.Pieces(KING), 0x1000000000000010);
+        CHECK_EQ(board.Pieces(ROOK), 0x8100000000000000);
+        CHECK_EQ(board.SquarePiece(E8), KING);
+        CHECK_EQ(board.SquarePiece(A8), ROOK);
+        CHECK_EQ(board.SquarePiece(H8), ROOK);
     }
     TEST_CASE("EP") {
         Board board = Board("8/8/8/8/1p6/8/P7/8 w - - 0 1", "a2a4");
