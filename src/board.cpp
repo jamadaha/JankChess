@@ -141,7 +141,8 @@ BB Board::GenerateAttacks(Color color) const noexcept {
     BB rooks      = Pieces(color, ROOK) | Pieces(color, QUEEN);
     BB sliders[2] = {bishops, rooks};
     const std::array<std::array<BB, SQUARE_COUNT>, 2> &p_attacks = {
-        PSEUDO_ATTACKS[BISHOP], PSEUDO_ATTACKS[ROOK]};
+        PSEUDO_ATTACKS[BISHOP], PSEUDO_ATTACKS[ROOK]
+    };
     for (int i = 0; i < 2; i++) {
         while (sliders[i]) {
             const Square piece = lsb_pop(sliders[i]);
@@ -202,8 +203,8 @@ Board::UndoInformation Board::ApplyMove(Move move) noexcept {
         const bool king_side        = dst > ori;
         const Square rook_ori       = ROOK_ORI[king_side][us];
         const Square rook_dst       = ROOK_DST[king_side][us];
-        PlacePiece(us, ROOK, rook_ori);
-        RemovePiece(us, ROOK, rook_dst);
+        RemovePiece(us, ROOK, rook_ori);
+        PlacePiece(us, ROOK, rook_dst);
         break;
     }
     case Move::NPromotion: piece = KNIGHT; break;
@@ -272,8 +273,8 @@ void Board::UndoMove(Move move, UndoInformation info) noexcept {
         const bool king_side        = dst > ori;
         const Square rook_ori       = ROOK_ORI[king_side][us];
         const Square rook_dst       = ROOK_DST[king_side][us];
-        PlacePiece(us, ROOK, rook_ori);
         RemovePiece(us, ROOK, rook_dst);
+        PlacePiece(us, ROOK, rook_ori);
         break;
     }
     case Move::NPromotion:
